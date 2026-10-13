@@ -17,3 +17,299 @@ body {
   background: var(--color-ink);
   color: var(--color-fg);
 }
+
+
+
+.neon-text {
+  /* Lit --neon s'il existe (posé par neon-xxx), sinon bleu volt */
+  --neon-color: var(--neon, var(--color-volt));
+  /* Couleur du texte : 25 % de la couleur néon + 75 % de blanc */
+  --neon-core: color-mix(in srgb, var(--neon-color) 25%, white);
+
+  color: var(--neon-core);
+  text-shadow:
+    0 0 6px  color-mix(in srgb, var(--neon-core) 92%, transparent),
+    0 0 30px color-mix(in srgb, var(--neon-core) 34%, transparent),
+    0 0 12px color-mix(in srgb, var(--neon-color) 52%, transparent),
+    0 0 21px color-mix(in srgb, var(--neon-color) 92%, transparent),
+    0 0 34px color-mix(in srgb, var(--neon-color) 78%, transparent),
+    0 0 54px color-mix(in srgb, var(--neon-color) 92%, transparent);
+}
+
+/* Crée les classes neon-xxx : une couleur du thème ou [#hex] */
+@utility neon-* {
+  --neon: --value(--color-*, [color]);
+}
+
+
+/* ---------- Texte rayé ----------
+   5 bandes de couleur séparées par un fin trait vide.
+   Change les couleurs avec --s1 à --s5. */
+
+.stripe-text {
+  --s1: var(--color-volt);
+  --s2: var(--color-ultra);
+  --s3: var(--color-lime);
+  --s4: var(--color-warn);
+  --s5: var(--color-bad);
+
+  background: linear-gradient(219deg,
+    var(--s1) 0 19%,   transparent 19% 20%,
+    var(--s2) 20% 39%, transparent 39% 40%,
+    var(--s3) 40% 59%, transparent 59% 60%,
+    var(--s4) 60% 79%, transparent 79% 80%,
+    var(--s5) 80% 100%);
+  -webkit-background-clip: text;  /* encore utile pour Safari */
+  background-clip: text;
+  color: transparent;
+}
+
+
+/* =========================================================
+   LIASSE DE BILLETS EN 3D (style GTA)
+   Une boîte en CSS 3D : 3 faces visibles (dessus, côté long, petit bout).
+   Réglages : --L longueur, --W largeur, --H épaisseur.
+   ========================================================= */
+
+.cash {
+  --L: 230px;              /* longueur du billet */
+  --W: 100px;              /* largeur du billet */
+  --H: 50px;               /* épaisseur de la liasse */
+  --gold: #d6a019;         /* bandes jaunes */
+  --band: #ececef;         /* centre de la bande (dessus) */
+  --band-side: #262626;    /* centre de la bande (côté) */
+  /* --page : épaisseur d'une feuille sur les tranches (3px par défaut).
+     À augmenter quand la liasse est réduite, sinon les lignes scintillent :
+     <div className="scale-35 [--page:8px]"> */
+
+  /* Grain de « fibres » pour les tranches : petites images SVG de bruit */
+  --fibres-h: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015 0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  --fibres-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.015' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+
+  position: relative;
+  width: var(--L);
+  height: var(--W);
+  transform-style: preserve-3d;                 /* les enfants restent en 3D */
+  transform: rotateX(58deg) rotateZ(28deg);     /* angle de vue (comme dans GTA) */
+}
+
+.cash > div {
+  position: absolute;
+}
+
+
+/* ---------- Les faces ----------
+   Dessus + 2 côtés longs + 2 petits bouts.
+   Les faces arrière ne se voient que quand la liasse tourne. */
+
+/* Dessus : fond clair, le billet est dessiné dans .bill */
+.cash-top {
+  inset: 0;
+  transform: translateZ(var(--H));              /* monté à la hauteur de la liasse */
+  background: #d0d1ba;
+}
+
+/* Côtés longs : la tranche des billets */
+.cash-front,
+.cash-back {
+  left: 0;
+  width: var(--L);
+  height: var(--H);
+  transform-origin: top;
+  transform: rotateX(90deg);                    /* replié vers le haut */
+  background:
+    var(--fibres-h),
+    linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, .35)),  /* plus sombre en bas */
+    /* Feuilles : dégradé doux (pas de bord net) pour éviter le scintillement */
+    repeating-linear-gradient(to bottom,
+      #3b3825 0, #1c1b11 calc(var(--page, 3px) / 2), #3b3825 var(--page, 3px));
+  background-blend-mode: overlay, normal, normal;
+}
+.cash-front { top: 100%; }                      /* collé au bord avant du dessus */
+.cash-back  { top: 0; }                         /* collé au bord arrière */
+
+/* Petits bouts : tranche plus claire */
+.cash-end,
+.cash-start {
+  top: 0;
+  width: var(--H);
+  height: var(--W);
+  transform-origin: left;
+  transform: rotateY(-90deg);                   /* replié vers le haut */
+  background:
+    var(--fibres-v),
+    linear-gradient(to right, rgba(0, 0, 0, .3), transparent 60%),
+    repeating-linear-gradient(to right,
+      #8a8460 0, #4e4a33 calc(var(--page, 3px) / 2), #8a8460 var(--page, 3px));
+  background-blend-mode: overlay, normal, normal;
+}
+.cash-end   { left: 100%; }                     /* collé au bord droit */
+.cash-start { left: 0; }                        /* collé au bord gauche */
+
+
+/* ---------- La bande de papier ---------- */
+
+.cash-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 40%;
+  width: 24%;
+  background: linear-gradient(to right,
+    var(--gold) 0 18%, var(--band) 18% 82%, var(--gold) 82%);
+}
+.cash-front .cash-band,
+.cash-back .cash-band {
+  background: linear-gradient(to right,
+    var(--gold) 0 18%, var(--band-side) 18% 82%, var(--gold) 82%);
+}
+
+/* Texte écrit deux fois le long de la bande, tête-bêche */
+.cash-band-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px/1 system-ui, sans-serif;
+  color: var(--gold);
+}
+.cash-band-text span {
+  writing-mode: vertical-rl;
+}
+.cash-band-text span + span {
+  transform: rotate(180deg);                    /* le 2e texte est à l'envers */
+}
+
+
+/* ---------- Le billet (sur le dessus) ---------- */
+
+.bill {
+  position: absolute;
+  inset: 5px;
+  border: 2px solid #5f6850;
+  border-radius: 3px;
+  overflow: hidden;
+  background:
+    /* motif guilloché : fines lignes croisées */
+    repeating-linear-gradient(45deg, rgba(60, 80, 50, .10) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgba(60, 80, 50, .10) 0 1px, transparent 1px 4px),
+    linear-gradient(#dcdcc8, #c3c6ad);
+  color: #3d4a33;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* « 100 » dans les 4 coins */
+.bill-num {
+  position: absolute;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
+}
+.bill-num.tl { top: 3px; left: 4px; }
+.bill-num.tr { top: 3px; right: 4px; }
+.bill-num.bl { bottom: 3px; left: 4px; }
+.bill-num.br { bottom: 3px; right: 4px; font-size: 18px; }
+
+/* Titre et numéros de série */
+.bill-title {
+  position: absolute;
+  top: 5px;
+  left: 34px;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+.bill-serial {
+  position: absolute;
+  font: 600 6px/1 ui-monospace, monospace;
+  color: #2f5a3a;
+}
+.bill-serial.s1 { bottom: 6px; left: 34px; }
+.bill-serial.s2 { top: 6px; right: 30px; }
+
+/* Sceau vert à gauche */
+.bill-seal {
+  position: absolute;
+  left: 38px;
+  top: 28px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px dotted #2f5a3a;
+  background: radial-gradient(circle, #6f9a72 0 35%, #4f7a55 36% 60%, transparent 62%);
+}
+
+/* Portrait à droite : un ovale avec double cadre */
+.bill-portrait {
+  position: absolute;
+  right: 26px;
+  top: 14px;
+  width: 42px;
+  height: 56px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 30% 22% at 50% 38%, #6d7660 0 95%, transparent),   /* tête */
+    radial-gradient(ellipse 48% 30% at 50% 100%, #6d7660 0 95%, transparent),  /* épaules */
+    radial-gradient(#b4b9a0, #8f977c);
+  box-shadow:
+    0 0 0 2px #5f6850,
+    0 0 0 4px #d0d1ba,
+    0 0 0 5px #5f6850;
+}
+
+
+/* ---------- Version petite (icône) ----------
+   Quand la liasse est réduite (scale), les détails très fins
+   (lignes des feuilles, grain des fibres) scintillent en tournant.
+   cash-small les remplace par des dégradés doux, sans lignes. */
+.cash.cash-small {
+  --fibres-h: none;
+  --fibres-v: none;
+}
+.cash-small .cash-front,
+.cash-small .cash-back {
+  background: linear-gradient(to bottom, #5a5638, #2a2819 55%, #16150d);
+}
+.cash-small .cash-end,
+.cash-small .cash-start {
+  background: linear-gradient(to right, #6e6a4c, #a39d76 50%, #6e6a4c);
+}
+
+
+/* =========================================================
+   LIASSE EN NÉON ET QUI TOURNE
+   ---------------------------------------------------------
+   <div className="cash-glow neon-lime">   ← halo (couleur avec neon-xxx)
+     <CashStack spin />                    ← rotation
+   </div>
+   ========================================================= */
+
+/* Le halo est posé sur le parent : un filter directement sur .cash
+   aplatirait la 3D. */
+.cash-glow {
+  --neon-color: var(--neon, var(--color-lime));
+  filter:
+    drop-shadow(0 0 3px var(--neon-color))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--neon-color) 60%, transparent));
+}
+
+/* Arêtes lumineuses : un trait de couleur néon autour de chaque face */
+.cash-glow .cash > div {
+  box-shadow: inset 0 0 0 1px var(--neon-color);
+}
+
+/* Rotation sur elle-même, comme sur un plateau tournant */
+.cash-spin {
+  animation: cash-spin 8s linear infinite;
+}
+@keyframes cash-spin {
+  from { transform: rotateX(58deg) rotateZ(28deg); }
+  to   { transform: rotateX(58deg) rotateZ(388deg); }   /* 28 + 360 = un tour complet */
+}
+
+/* Si l'utilisateur a demandé moins d'animations dans son système */
+@media (prefers-reduced-motion: reduce) {
+  .cash-spin { animation: none; }
+}
