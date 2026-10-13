@@ -26,14 +26,23 @@ export default function AcidCard() {
       <h2 className="text-xl font-bold ">Labo d'Acide</h2>
 
       <div className="flex items-end justify-between">
-        <span className="text-3xl font-bold text-lime">{Math.floor(progress * 100)} %</span>
+        <span className="text-3xl font-bold text-lime">
+          {Math.floor(progress * 100)} %
+        </span>
         <span className="text-dim">
-          {running ? formatDuration(remaining) : ready ? "Prêt à vendre" : "À l'arrêt"}
+          {running
+            ? formatDuration(remaining)
+            : ready
+              ? "Prêt à vendre"
+              : "À l'arrêt"}
         </span>
       </div>
 
       <div className="h-2.5 border border-line bg-ink">
-        <div className="h-full bg-lime" style={{ width: `${progress * 100}%` }} />
+        <div
+          className="h-full bg-lime"
+          style={{ width: `${progress * 100}%` }}
+        />
       </div>
 
       {/* ④ Ce bouton n'apparaît que si la production est à l'arrêt */}
@@ -43,6 +52,14 @@ export default function AcidCard() {
           className="self-start border border-lime px-4 py-2 text-lime"
         >
           Acheter les fournitures · {formatMoney(ACID.supplyCost)}
+        </button>
+      )}
+      {ready && (
+        <button
+          onClick={() => setStart(null)}
+          className="self-start border border-lime px-4 py-2 text-lime"
+        >
+          vendre l'acide · + {formatMoney(ACID.soloSale)}
         </button>
       )}
     </section>

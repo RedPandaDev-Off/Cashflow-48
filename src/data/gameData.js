@@ -5,7 +5,7 @@ export const GAME_DAY = 48 * MINUTE; // 1 jour de jeu = 48 minutes réelles
  
 export const ACID = {
   supplyCost: 60000,
-  cycle: 3 * HOUR,
+  cycle: 20 * 1000,
   soloSale: 335000,
   boostWindow: 30 * MINUTE, // le boost double la vitesse sur ces 30 minutes
 };
